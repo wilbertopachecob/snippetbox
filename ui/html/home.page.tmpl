@@ -3,5 +3,26 @@
 
 {{define "body"}}
     <h2>Latest Snippets</h2>
-    <p>There's nothing to see here yet!</p>
+    {{if .Snippets}}
+        <table>
+            <thead>
+                <th>Title</th>
+                <th>Created</th>
+                <th>ID</th>
+            </thead>
+            <tbody>
+                {{range .Snippets}}
+                    <tr>
+                        <td>{{.Title}}</td>
+                        <td>{{humanDate .Created}}</td>
+                        <td>
+                            <a href='/snippet?id={{.ID}}'>{{.Title}}</a>
+                        </td>
+                    </tr>
+                {{end}}
+            </tbody>
+        </table>
+    {{else}}
+        <p>There's nothing to see here yet!</p>
+    {{end}}
 {{end}}

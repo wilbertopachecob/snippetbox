@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"text/template"
 
 	"wilbertopachecob/snippetbox/pkg/models/mysql"
 
@@ -15,9 +16,10 @@ import (
 )
 
 type application struct {
-	infolog  *log.Logger
-	errorlog *log.Logger
-	snippets *mysql.SnippetModel
+	infolog       *log.Logger
+	errorlog      *log.Logger
+	snippets      *mysql.SnippetModel
+	templateCache map[string]*template.Template
 }
 
 func getEnvVar(key string) string {
@@ -57,10 +59,16 @@ func main() {
 	}
 	defer db.Close()
 
+	templateCache, err := newTemplateCache("./ui/html/")
+	if err != nil {
+		errorLog.Fatal(err)
+	}
+
 	app := &application{
-		infolog:  infoLog,
-		errorlog: errorLog,
-		snippets: &mysql.SnippetModel{DB: db},
+		infolog:       infoLog,
+		errorlog:      errorLog,
+		snippets:      &mysql.SnippetModel{DB: db},
+		templateCache: templateCache,
 	}
 
 	// Initialize a new http.Server struct. We set the Addr and Handler fields
