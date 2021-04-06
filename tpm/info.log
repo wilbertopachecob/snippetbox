@@ -1,2 +1,7 @@
-INFO	2021/04/03 12:55:34 Starting server on port :4000
-INFO	2021/04/01 14:18:33 open C:\Users\wilbe\Wilberto\Projects\Go\snippetbox/ui/html/footer.partial.tmpl: The system cannot find the file specified.
+INFO	2021/04/05 05:13:13 Starting server on port :4000
+INFO	2021/04/05 05:13:27 [::1]:51915 - HTTP/1.1 GET /
+INFO	2021/04/05 05:13:27 [::1]:51915 - HTTP/1.1 GET /static/img/favicon.ico
+INFO	2021/04/05 05:13:46 [::1]:51915 - HTTP/1.1 GET /
+INFO	2021/04/05 05:13:46 [::1]:51915 - HTTP/1.1 GET /static/img/favicon.ico
+INFO	2021/04/05 05:13:47 [::1]:51915 - HTTP/1.1 GET /
+INFO	2021/04/05 05:13:47 [::1]:51915 - HTTP/1.1 GET /static/img/favicon.ico

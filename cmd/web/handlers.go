@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"time"
+	"wilbertopachecob/snippetbox/pkg/forms"
 	"wilbertopachecob/snippetbox/pkg/models"
 )
 
@@ -57,10 +58,12 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	// the http.NotFound() function to send a 404 response to the client.
 	// Importantly, we then return from the handler. If we don't return the hand
 	// would keep executing and also write the "Hello from SnippetBox" message.
-	if r.URL.Path != "/" {
-		app.notFound(w)
-		return
-	}
+	// Because Pat matches the "/" path exactly, we can now remove the manual c
+	// of r.URL.Path != "/" from this handler.
+	// if r.URL.Path != "/" {
+	// 	app.notFound(w)
+	// 	return
+	// }
 
 	snippets, err := app.snippets.Latest()
 	if err != nil {
@@ -91,7 +94,9 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
-	ID, err := strconv.Atoi(r.URL.Query().Get("id"))
+	// Pat doesn't strip the colon from the named capture key, so we need to
+	// get the value of ":id" from the query string instead of "id".
+	ID, err := strconv.Atoi(r.URL.Query().Get(":id"))
 	if err != nil || ID <= 0 {
 		app.notFound(w)
 		return
@@ -129,25 +134,84 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 	// }
 }
 
+func (app *application) createSnippetForm(w http.ResponseWriter, r *http.Request) {
+	// app.render("create.page.tmpl", w, nil, r)
+	app.render("create.page.tmpl", w, &templateData{
+		Form: forms.New(nil),
+	}, r)
+}
+
 func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		w.Header().Set("Allow", "POST")
-		// w.WriteHeader(405)
-		// w.Write([]byte("Method not allowed"))
-		//http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		app.clientError(w, http.StatusMethodNotAllowed)
+	// The check of r.Method != "POST" is now superfluous and can be removed.
+	// if r.Method != "POST" {
+	// 	w.Header().Set("Allow", "POST")
+	// 	// w.WriteHeader(405)
+	// 	// w.Write([]byte("Method not allowed"))
+	// 	//http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	// 	app.clientError(w, http.StatusMethodNotAllowed)
+	// 	return
+	// }
+
+	// First we call r.ParseForm() which adds any data in POST request bodies
+	// to the r.PostForm map. This also works in the same way for PUT and PATCH
+	// requests. If there are any errors, we use our app.ClientError helper to
+	// a 400 Bad Request response to the user.
+	err := r.ParseForm()
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
 		return
 	}
 
-	title := "O snail"
-	content := "O snail\nClimb Mount Fuji,\nBut slowly, slowly!\n\n– Kobayashi"
-	expires := "7"
+	// title := r.PostForm.Get("title")
+	// content := r.PostForm.Get("content")
+	// expires := r.PostForm.Get("expires")
 
-	ID, err := app.snippets.Insert(title, content, expires)
+	// errors := make(map[string]string)
+
+	// if strings.TrimSpace(title) == "" {
+	// 	errors["title"] = "The field can not be blank"
+	// } else if utf8.RuneCountInString(title) > 100 {
+	// 	errors["title"] = "The field can not contain more than 100 characters"
+	// }
+
+	// if strings.TrimSpace(content) == "" {
+	// 	errors["content"] = "The field can not be blank"
+	// }
+
+	// if strings.TrimSpace(expires) == "" {
+	// 	errors["expires"] = "The field can not be blank"
+	// } else if expires != "1" && expires != "7" && expires != "365" {
+	// 	errors["expires"] = "This field is invalid"
+	// }
+	// // If there are any errors, dump them in a plain text HTTP response and ret
+	// // from the handler.
+	// if len(errors) > 0 {
+	// 	data := &templateData{
+	// 		FormData:   r.PostForm,
+	// 		FormErrors: errors,
+	// 	}
+	// 	app.render("create.page.tmpl", w, data, r)
+	// 	return
+	// }
+
+	form := forms.New(r.PostForm)
+
+	form.Required("title", "content", "expires")
+	form.MaxLength("title", 100)
+	form.PermitedValues("expires", "1", "7", "365")
+
+	if !form.Valid() {
+		app.render("create.page.tmpl", w, &templateData{
+			Form: form,
+		}, r)
+		return
+	}
+
+	ID, err := app.snippets.Insert(form.Get("title"), form.Get("content"), form.Get("expires"))
 	if err != nil {
 		app.serverError(w, err)
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("/snippet?id=%d", ID), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("/snippet/%d", ID), http.StatusSeeOther)
 }

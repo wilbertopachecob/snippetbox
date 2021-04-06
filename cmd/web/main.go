@@ -43,13 +43,14 @@ func main() {
 	flag.Parse()
 
 	//using a file to store info logs
-	f, err := os.OpenFile("./tpm/info.log", os.O_RDWR|os.O_CREATE, 0666)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer f.Close()
+	// f, err := os.OpenFile("./tpm/info.log", os.O_RDWR|os.O_CREATE, 0666)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// defer f.Close()
 
-	infoLog := log.New(f, "INFO\t", log.Ldate|log.Ltime)
+	// infoLog := log.New(f, "INFO\t", log.Ldate|log.Ltime)
+	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
 	dns := fmt.Sprintf("%s:%s@/%s?parseTime=true", getEnvVar("DB_USERNAME"), getEnvVar("DB_PASSWORD"), getEnvVar("DB_DATABASE"))
