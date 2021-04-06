@@ -21,12 +21,18 @@ func getExecutablePath() string {
 	return dir
 }
 
-func addDefaultData(td *templateData, r *http.Request) *templateData {
+func (app *application) addDefaultData(td *templateData, r *http.Request) *templateData {
 	if td == nil {
 		td = &templateData{CurrentYear: time.Now().Year()}
 		return td
 	}
 	td.CurrentYear = time.Now().Year()
+	// Use the PopString() method to retrieve the value for the "flash" key.
+	// PopString() also deletes the key and value from the session data, so it
+	// acts like a one-time fetch. If there is no matching key in the session
+	// data this will return the empty string.
+	td.Flash = app.session.PopString(r, "flash")
+
 	return td
 }
 
@@ -44,7 +50,7 @@ func (app *application) render(page string, w http.ResponseWriter, data *templat
 	// Write the template to the buffer, instead of straight to the
 	// http.ResponseWriter. If there's an error, call our serverError helper and
 	// return.
-	err := ts.Execute(buf, addDefaultData(data, r))
+	err := ts.Execute(buf, app.addDefaultData(data, r))
 	if err != nil {
 		app.serverError(w, err)
 		return
@@ -212,6 +218,13 @@ func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 		return
 	}
+
+	// Use the Put() method to add a string value ("Your snippet was saved
+	// successfully!") and the corresponding key ("flash") to the session
+	// data. Note that if there's no existing session for the current user
+	// (or their session has expired) then a new, empty, session for them
+	// will automatically be created by the session middleware.
+	app.session.Put(r, "flash", "The Snippet was created successfuly")
 
 	http.Redirect(w, r, fmt.Sprintf("/snippet/%d", ID), http.StatusSeeOther)
 }

@@ -8,10 +8,12 @@ import (
 	"net/http"
 	"os"
 	"text/template"
+	"time"
 
 	"wilbertopachecob/snippetbox/pkg/models/mysql"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/golangcollege/sessions"
 	"github.com/joho/godotenv"
 )
 
@@ -19,6 +21,7 @@ type application struct {
 	infolog       *log.Logger
 	errorlog      *log.Logger
 	snippets      *mysql.SnippetModel
+	session       *sessions.Session
 	templateCache map[string]*template.Template
 }
 
@@ -65,11 +68,20 @@ func main() {
 		errorLog.Fatal(err)
 	}
 
+	// Use the sessions.New() function to initialize a new session manager,
+	// passing in the secret key as the parameter. Then we configure it so
+	// sessions always expires after 1 hour.
+	secret := getEnvVar("COOKIE_SECRET")
+	session := sessions.New([]byte(secret))
+	session.Lifetime = 1 * time.Hour
+	session.Secure = true
+
 	app := &application{
 		infolog:       infoLog,
 		errorlog:      errorLog,
 		snippets:      &mysql.SnippetModel{DB: db},
 		templateCache: templateCache,
+		session:       session,
 	}
 
 	// Initialize a new http.Server struct. We set the Addr and Handler fields
@@ -84,7 +96,7 @@ func main() {
 
 	//log.Printf("Starting server on port %s", getEnvVar("PORT"))
 	infoLog.Printf("Starting server on port %s", *addr)
-	err = svr.ListenAndServe()
+	err = svr.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem")
 	errorLog.Fatal(err)
 }
 
