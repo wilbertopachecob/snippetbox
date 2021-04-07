@@ -10,6 +10,8 @@ import (
 	"time"
 	"wilbertopachecob/snippetbox/pkg/forms"
 	"wilbertopachecob/snippetbox/pkg/models"
+
+	"github.com/justinas/nosurf"
 )
 
 func getExecutablePath() string {
@@ -33,6 +35,7 @@ func (app *application) addDefaultData(td *templateData, r *http.Request) *templ
 	// data this will return the empty string.
 	td.Flash = app.session.PopString(r, "flash")
 	td.Authenticated = app.authenticatedUser(r)
+	td.CSRFToken = nosurf.Token(r)
 	return td
 }
 

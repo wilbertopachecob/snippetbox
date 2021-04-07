@@ -15,6 +15,7 @@ type templateData struct {
 	CurrentYear   int
 	Flash         string
 	Form          *forms.Form
+	CSRFToken     string
 }
 
 func humanDate(t time.Time) string {
