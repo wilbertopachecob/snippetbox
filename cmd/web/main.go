@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"database/sql"
 	"flag"
 	"fmt"
@@ -21,6 +22,7 @@ type application struct {
 	infolog       *log.Logger
 	errorlog      *log.Logger
 	snippets      *mysql.SnippetModel
+	users         *mysql.UserModel
 	session       *sessions.Session
 	templateCache map[string]*template.Template
 }
@@ -80,8 +82,16 @@ func main() {
 		infolog:       infoLog,
 		errorlog:      errorLog,
 		snippets:      &mysql.SnippetModel{DB: db},
+		users:         &mysql.UserModel{DB: db},
 		templateCache: templateCache,
 		session:       session,
+	}
+
+	// Initialize a tls.Config struct to hold the non-default TLS settings we w
+	// the server to use.
+	tlsConfig := &tls.Config{
+		PreferServerCipherSuites: true,
+		CurvePreferences:         []tls.CurveID{tls.X25519, tls.CurveP256},
 	}
 
 	// Initialize a new http.Server struct. We set the Addr and Handler fields
@@ -89,9 +99,14 @@ func main() {
 	// the ErrorLog field so that the server now uses the custom errorLog logge
 	// the event of any problems.
 	svr := &http.Server{
-		Addr:     *addr,
-		Handler:  app.routes(),
-		ErrorLog: errorLog,
+		Addr:      *addr,
+		Handler:   app.routes(),
+		TLSConfig: tlsConfig,
+		ErrorLog:  errorLog,
+		// Add Idle, Read and Write timeouts to the server.
+		IdleTimeout:  time.Minute,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
 	}
 
 	//log.Printf("Starting server on port %s", getEnvVar("PORT"))

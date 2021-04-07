@@ -228,3 +228,55 @@ func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
 
 	http.Redirect(w, r, fmt.Sprintf("/snippet/%d", ID), http.StatusSeeOther)
 }
+
+func (app *application) signupUserForm(w http.ResponseWriter, r *http.Request) {
+	app.render("signup.page.tmpl", w, &templateData{
+		Form: forms.New(nil),
+	}, r)
+}
+func (app *application) signupUser(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		app.serverError(w, err)
+	}
+
+	f := forms.New(r.PostForm)
+	f.Required("name", "email", "password")
+	f.MinLength("password", 10)
+	f.MatchesPattern("email", forms.EmailRX)
+
+	if !f.Valid() {
+		app.render("signup.page.tmpl", w, &templateData{
+			Form: f,
+		}, r)
+		return
+	}
+
+	err = app.users.Insert(f.Get("name"), f.Get("email"), f.Get("password"))
+	if err != nil {
+		if err == models.ErrDuplicateEmail {
+			f.Errors.Add("email", "This email already exist on the DB")
+			app.render("signup.page.tmpl", w, &templateData{
+				Form: f,
+			}, r)
+			return
+		}
+		app.serverError(w, err)
+		return
+	}
+
+	app.session.Put(r, "flash", "Your signup was successful. Please log in.")
+	http.Redirect(w, r, "/user/login", http.StatusSeeOther)
+}
+
+func (app *application) loginUserForm(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, "loginUserForm")
+}
+
+func (app *application) loginUser(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, "loginUser")
+}
+
+func (app *application) logout(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, "loginUser")
+}
