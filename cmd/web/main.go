@@ -77,6 +77,7 @@ func main() {
 	session := sessions.New([]byte(secret))
 	session.Lifetime = 1 * time.Hour
 	session.Secure = true
+	session.SameSite = http.SameSiteStrictMode
 
 	app := &application{
 		infolog:       infoLog,

@@ -20,6 +20,17 @@ func (app *application) logRequest(next http.Handler) http.Handler {
 	})
 }
 
+func (app *application) requiredAuthenticated(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if app.authenticatedUser(r) == 0 {
+			app.session.Put(r, "flash", "Please authenticate to have accesss to restricted content")
+			http.Redirect(w, r, "/user/login", http.StatusSeeOther)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
 func (app *application) recoverPanic(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Create a deferred function (which will always be run in the event
