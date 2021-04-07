@@ -32,11 +32,11 @@ func (app *application) addDefaultData(td *templateData, r *http.Request) *templ
 	// acts like a one-time fetch. If there is no matching key in the session
 	// data this will return the empty string.
 	td.Flash = app.session.PopString(r, "flash")
-
+	td.Authenticated = app.authenticatedUser(r)
 	return td
 }
 
-func (app *application) render(page string, w http.ResponseWriter, data *templateData, r *http.Request) {
+func (app *application) render(w http.ResponseWriter, r *http.Request, page string, data *templateData) {
 	// Retrieve the appropriate template set from the cache based on the page n
 	// (like 'home.page.tmpl'). If no entry exists in the cache with the
 	// provided name, call the serverError helper method that we made earlier.
@@ -96,7 +96,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 
-	app.render("home.page.tmpl", w, data, r)
+	app.render(w, r, "home.page.tmpl", data)
 }
 
 func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
@@ -119,7 +119,7 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 
 	data := &templateData{Snippet: s}
 
-	app.render("show.page.tmpl", w, data, r)
+	app.render(w, r, "show.page.tmpl", data)
 
 	// dir := getExecutablePath()
 	// files := []string{
@@ -142,9 +142,9 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 
 func (app *application) createSnippetForm(w http.ResponseWriter, r *http.Request) {
 	// app.render("create.page.tmpl", w, nil, r)
-	app.render("create.page.tmpl", w, &templateData{
+	app.render(w, r, "create.page.tmpl", &templateData{
 		Form: forms.New(nil),
-	}, r)
+	})
 }
 
 func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
@@ -207,9 +207,9 @@ func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
 	form.PermitedValues("expires", "1", "7", "365")
 
 	if !form.Valid() {
-		app.render("create.page.tmpl", w, &templateData{
+		app.render(w, r, "create.page.tmpl", &templateData{
 			Form: form,
-		}, r)
+		})
 		return
 	}
 
@@ -230,9 +230,9 @@ func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) signupUserForm(w http.ResponseWriter, r *http.Request) {
-	app.render("signup.page.tmpl", w, &templateData{
+	app.render(w, r, "signup.page.tmpl", &templateData{
 		Form: forms.New(nil),
-	}, r)
+	})
 }
 func (app *application) signupUser(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
@@ -246,9 +246,9 @@ func (app *application) signupUser(w http.ResponseWriter, r *http.Request) {
 	f.MatchesPattern("email", forms.EmailRX)
 
 	if !f.Valid() {
-		app.render("signup.page.tmpl", w, &templateData{
+		app.render(w, r, "signup.page.tmpl", &templateData{
 			Form: f,
-		}, r)
+		})
 		return
 	}
 
@@ -256,9 +256,9 @@ func (app *application) signupUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if err == models.ErrDuplicateEmail {
 			f.Errors.Add("email", "This email already exist on the DB")
-			app.render("signup.page.tmpl", w, &templateData{
+			app.render(w, r, "signup.page.tmpl", &templateData{
 				Form: f,
-			}, r)
+			})
 			return
 		}
 		app.serverError(w, err)
@@ -270,13 +270,51 @@ func (app *application) signupUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) loginUserForm(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "loginUserForm")
+	app.render(w, r, "login.page.tmpl", &templateData{
+		Form: forms.New(nil),
+	})
 }
 
 func (app *application) loginUser(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "loginUser")
+	err := r.ParseForm()
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	f := forms.New(r.PostForm)
+	f.Required("email", "password")
+	f.MatchesPattern("email", forms.EmailRX)
+
+	if !f.Valid() {
+		app.render(w, r, "login.page.tmpl", &templateData{
+			Form: f,
+		})
+		return
+	}
+
+	id, err := app.users.Authenticate(f.Get("email"), f.Get("password"))
+	if err != nil {
+		if err == models.ErrNoRecord {
+			f.Errors.Add("generic", "There is no user on the DB with the provided email")
+			app.render(w, r, "login.page.tmpl", &templateData{Form: f})
+			return
+		} else if err == models.ErrInvalidCredentials {
+			f.Errors.Add("generic", "Please verify the provided password")
+			app.render(w, r, "login.page.tmpl", &templateData{Form: f})
+			return
+		}
+		app.serverError(w, err)
+		return
+	}
+	// Add the ID of the current user to the session, so that they are now 'logg
+	// in'.
+	app.session.Put(r, "userID", id)
+	// Redirect the user to the create snippet page.
+	http.Redirect(w, r, "/snippet/create", http.StatusSeeOther)
 }
 
 func (app *application) logout(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "loginUser")
+	app.session.Remove(r, "userID")
+	app.session.Put(r, "flash", "You have been logout successfully")
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
