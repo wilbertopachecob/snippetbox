@@ -15,7 +15,7 @@ go get -u
 This will create an executable specific to your OS in the same folder.
 
 ```
-go build -v
+go build -v cmd/web/*
 ```
 
 ### Running
