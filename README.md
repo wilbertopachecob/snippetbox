@@ -2,23 +2,23 @@
 
 Golang project from Let's Go book by Alex Edwards
 
-### Dependencies
-
-First download all the Go packages needed.
-
-```
-go get -u
-```
-
 ### Compile
 
 This will create an executable specific to your OS in the same folder.
 
+For Linux
+
 ```
-go build -v cmd/web/*
+go build -v -o snippetbox cmd/web/*
 ```
 
-### Running
+For Windows
+
+```
+go build -v -o snippetbox.exe cmd/web/*
+```
+
+### Run it
 
 You can just run it using the below command on Linux
 
