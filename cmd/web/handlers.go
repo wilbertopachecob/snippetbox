@@ -34,7 +34,7 @@ func (app *application) addDefaultData(td *templateData, r *http.Request) *templ
 	// acts like a one-time fetch. If there is no matching key in the session
 	// data this will return the empty string.
 	td.Flash = app.session.PopString(r, "flash")
-	td.Authenticated = app.authenticatedUser(r)
+	td.AuthenticatedUser = app.authenticatedUser(r)
 	td.CSRFToken = nosurf.Token(r)
 	return td
 }
@@ -320,4 +320,8 @@ func (app *application) logout(w http.ResponseWriter, r *http.Request) {
 	app.session.Remove(r, "userID")
 	app.session.Put(r, "flash", "You have been logout successfully")
 	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func ping(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("OK"))
 }

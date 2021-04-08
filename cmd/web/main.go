@@ -11,6 +11,7 @@ import (
 	"text/template"
 	"time"
 
+	"wilbertopachecob/snippetbox/pkg/models"
 	"wilbertopachecob/snippetbox/pkg/models/mysql"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -18,11 +19,23 @@ import (
 	"github.com/joho/godotenv"
 )
 
+type contextKey string
+
+var contextKeyUser = contextKey("user")
+
 type application struct {
-	infolog       *log.Logger
-	errorlog      *log.Logger
-	snippets      *mysql.SnippetModel
-	users         *mysql.UserModel
+	infolog  *log.Logger
+	errorlog *log.Logger
+	snippets interface {
+		Insert(string, string, string) (int, error)
+		Get(int) (*models.Snippet, error)
+		Latest() ([]*models.Snippet, error)
+	}
+	users interface {
+		Insert(string, string, string) error
+		Authenticate(string, string) (int, error)
+		Get(int) (*models.User, error)
+	}
 	session       *sessions.Session
 	templateCache map[string]*template.Template
 }

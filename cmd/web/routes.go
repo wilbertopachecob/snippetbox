@@ -12,7 +12,7 @@ func (app *application) routes() http.Handler {
 	// Create a new middleware chain containing the middleware specific to
 	// our dynamic application routes. For now, this chain will only contain
 	// the session middleware but we'll add more to it later.
-	dynamicMiddleware := alice.New(app.session.Enable, noSurf)
+	dynamicMiddleware := alice.New(app.session.Enable, noSurf, app.authenticate)
 	//mux := http.NewServeMux()
 	// mux.HandleFunc("/", app.home)
 	// mux.HandleFunc("/snippet", app.showSnippet)
@@ -28,6 +28,8 @@ func (app *application) routes() http.Handler {
 	mux.Get("/user/login", dynamicMiddleware.ThenFunc(app.loginUserForm))
 	mux.Post("/user/signup", dynamicMiddleware.ThenFunc(app.signupUser))
 	mux.Get("/user/signup", dynamicMiddleware.ThenFunc(app.signupUserForm))
+	//just for testing purposes
+	mux.Get("/ping", http.HandlerFunc(ping))
 	// Create a file server which serves files out of the "./ui/static" directo
 	// Note that the path given to the http.Dir function is relative to the pro
 	// directory root.
