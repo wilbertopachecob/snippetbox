@@ -83,16 +83,18 @@ func main() {
 			showHelp()
 		}
 	}
-	switch os.Args[1] {
-	case "get":
-		getCMD.Parse(os.Args[2:])
-		if *model != "" && *id > 0 {
-			err = getModel(db, *model, *id)
-			if err != nil {
-				log.Fatal(err)
+	if len(os.Args) > 0 {
+		switch os.Args[1] {
+		case "get":
+			getCMD.Parse(os.Args[2:])
+			if *model != "" && *id > 0 {
+				err = getModel(db, *model, *id)
+				if err != nil {
+					log.Fatal(err)
+				}
+			} else {
+				showHelp()
 			}
-		} else {
-			showHelp()
 		}
 	}
 

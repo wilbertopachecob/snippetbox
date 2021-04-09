@@ -15,7 +15,7 @@ USE snippetbox;
 
 Copy and paste content of file **snippetbox.sql** in your mysql client and run the script.
 
-### Compile
+### Compile main program
 
 This will create an executable specific to your OS in the same folder.
 
@@ -31,7 +31,7 @@ For Windows
 go build -v -o snippetbox.exe cmd/web/*
 ```
 
-### Run it
+### Run main
 
 You can just run it using the below command on Linux
 
@@ -43,4 +43,40 @@ Or, on Windows
 
 ```
 snippetbox.exe
+```
+
+### Compile CLI program
+
+This will create an executable specific to your OS in the same folder.
+
+For Linux
+
+```
+go build cmd/cli
+```
+
+For Windows
+
+```
+go build cmd/cli
+```
+
+### Run CLI
+
+You can just run it using the below command on Linux
+
+```
+./cli
+```
+
+Or, on Windows
+
+```
+cli.exe
+```
+
+### Execute CLI without compiling
+
+```
+go run cmd/cli/main.go -h
 ```
