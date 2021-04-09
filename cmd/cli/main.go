@@ -29,7 +29,7 @@ func showHelp() {
 	Usage Snippets CLI
 	Options:
 		-show	        Shows [snippets]			(usage="snippets")
-		get	[options]	Get a user or snippet		(usage="-model "user" -id 1")
+		get	[options]	Get a user or snippet		(usage=-model "user" -id 1)
 			-model      The model name				(usage="user|snippet")
 			-id         The id of the model			(usage=1)
 	`)
@@ -70,7 +70,7 @@ func main() {
 			for index, s := range ss {
 				snippet, err := json.MarshalIndent(s, "", "   ")
 				if err != nil {
-					log.Fatalf(err.Error())
+					log.Fatal(err)
 				}
 				fmt.Printf("Snippet %d: %+v \n", index, string(snippet))
 			}
