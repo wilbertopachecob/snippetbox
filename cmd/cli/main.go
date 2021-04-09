@@ -29,6 +29,7 @@ func showHelp() {
 	Usage Snippets CLI
 	Options:
 		-show	        Shows [snippets]			(usage="snippets")
+		-h	        	Shows help			
 		get	[options]	Get a user or snippet		(usage=-model "user" -id 1)
 			-model      The model name				(usage="user|snippet")
 			-id         The id of the model			(usage=1)
@@ -44,6 +45,8 @@ func setFlag(flag *flag.FlagSet) {
 func main() {
 	var strF string
 	flag.StringVar(&strF, "show", "", "")
+	var helpF bool
+	flag.BoolVar(&helpF, "h", false, "")
 
 	getCMD := flag.NewFlagSet("get", flag.ExitOnError)
 	model := getCMD.String("model", "", "string representing the model")
@@ -91,6 +94,10 @@ func main() {
 		} else {
 			showHelp()
 		}
+	}
+
+	if helpF {
+		showHelp()
 	}
 }
 
